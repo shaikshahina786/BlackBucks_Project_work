@@ -4,30 +4,35 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-import speech_recognition as sr
-import re
+import pyttsx3
+import os
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 
-# ⚠️ DO NOT use pyttsx3 on Streamlit Cloud
-# import pyttsx3 ← removed
+# Detect if running on Streamlit Cloud
+IS_CLOUD = os.getenv("STREAMLIT_CLOUD", False)
+
+# Optional imports if not running on cloud
+if not IS_CLOUD:
+    import speech_recognition as sr
 
 st.set_page_config(page_title="Smart Market Analyzer", layout="wide")
 
-# 🔒 Voice Output Removed for Deployment
-# if 'engine' not in st.session_state:
-#     st.session_state.engine = pyttsx3.init()
+if 'engine' not in st.session_state:
+    st.session_state.engine = pyttsx3.init()
 
-# def speak_safe(text):
-#     try:
-#         st.session_state.engine.say(text)
-#         st.session_state.engine.runAndWait()
-#     except RuntimeError:
-#         pass
+def speak_safe(text):
+    try:
+        st.session_state.engine.say(text)
+        st.session_state.engine.runAndWait()
+    except RuntimeError:
+        pass
 
 def listen_to_microphone():
+    if IS_CLOUD:
+        return "Microphone access is disabled on Streamlit Cloud."
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
         st.info("🎤 Listening... Please speak your question clearly.")
@@ -43,6 +48,7 @@ def listen_to_microphone():
 st.title("🛍️ Smart Market Analyzer with AI Assistant")
 st.markdown("""
 Welcome to **Smart Market Analyzer**, an intelligent data exploration platform for:
+
 - 🧠 Customer Segmentation using Clustering (KMeans)
 - 🛒 Market Basket Analysis using Apriori Algorithm
 - 📊 Interactive Data Visualization
@@ -55,12 +61,15 @@ if 'df' not in st.session_state:
 st.sidebar.title("🤖 AI Assistant")
 user_query = st.sidebar.text_input("Ask a question about your data or the analysis:")
 
-mic_button = st.sidebar.button("🎙️ Use Microphone")
-if mic_button:
-    mic_query = listen_to_microphone()
-    if mic_query:
-        user_query = mic_query
-        st.sidebar.success(f"You said: {mic_query}")
+if not IS_CLOUD:
+    mic_button = st.sidebar.button("🎙️ Use Microphone")
+    if mic_button:
+        mic_query = listen_to_microphone()
+        if mic_query:
+            user_query = mic_query
+            st.sidebar.success(f"You said: {mic_query}")
+else:
+    st.sidebar.info("🎤 Microphone feature is disabled on Streamlit Cloud.")
 
 def advanced_bot_reply(query, df):
     query = query.lower()
@@ -97,10 +106,9 @@ if user_query:
     st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
     st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
 
-# 🔊 Voice output disabled
-# read_button = st.sidebar.button("🔊 Read Bot Response Aloud")
-# if read_button and 'bot_response' in st.session_state:
-#     speak_safe(st.session_state['bot_response'])
+read_button = st.sidebar.button("🔊 Read Bot Response Aloud")
+if read_button and 'bot_response' in st.session_state:
+    speak_safe(st.session_state['bot_response'])
 
 option = st.sidebar.selectbox(
     "Choose Analysis Module",
