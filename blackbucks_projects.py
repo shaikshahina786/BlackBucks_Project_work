@@ -22,18 +22,11 @@ Welcome to **Smart Market Analyzer**, an intelligent data exploration platform f
 - 🤖 AI Assistant with Data Analysis Capability
 """)
 
+# Initialize session state for DataFrame
 if 'df' not in st.session_state:
     st.session_state['df'] = None
 
-st.sidebar.title("🤖 AI Assistant")
-user_query = st.sidebar.text_input("Ask a question about your data or the analysis:", key="user_input")
-submit_query = st.sidebar.button("Enter")
-
-if submit_query and user_query:
-    df = st.session_state.get('df')
-    st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
-    st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
-
+# ------------------- AI Assistant Function -------------------
 def advanced_bot_reply(query, df):
     query = query.lower()
     if any(word in query for word in ["what", "how", "task", "purpose", "use", "feature", "action"]) and ("website" in query or "platform" in query):
@@ -64,13 +57,23 @@ def advanced_bot_reply(query, df):
         return nulls[nulls > 0].to_string() if not nulls.empty else "No missing values."
     return "I'm here to assist with your uploaded dataset and this website's features. Please ask questions related to your data or the tool."
 
-read_button = st.sidebar.button("🔊 Read Bot Response Aloud")  # Optional: can remove since pyttsx3 is removed
+# ------------------- Sidebar Assistant -------------------
+st.sidebar.title("🤖 AI Assistant")
+user_query = st.sidebar.text_input("Ask a question about your data or the analysis:")
+enter_button = st.sidebar.button("🔍 Enter")
 
+if enter_button:
+    df = st.session_state.get('df')
+    st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
+    st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
+
+# ------------------- Module Selection -------------------
 option = st.sidebar.selectbox(
     "Choose Analysis Module",
     ("Upload Dataset", "Data Visualization", "Customer Segmentation (Clustering)", "Market Basket Analysis")
 )
 
+# ------------------- Upload Dataset -------------------
 if option == "Upload Dataset":
     uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
     if uploaded_file is not None:
@@ -83,6 +86,7 @@ if option == "Upload Dataset":
         st.session_state['bot_response'] = auto_summary
         st.sidebar.info(f"Bot: {auto_summary}")
 
+# ------------------- Data Visualization -------------------
 elif option == "Data Visualization":
     df = st.session_state.get('df')
     if df is not None:
@@ -131,6 +135,7 @@ elif option == "Data Visualization":
     else:
         st.warning("Please upload a dataset first.")
 
+# ------------------- Customer Segmentation -------------------
 elif option == "Customer Segmentation (Clustering)":
     df = st.session_state.get('df')
     if df is not None:
@@ -154,6 +159,7 @@ elif option == "Customer Segmentation (Clustering)":
     else:
         st.warning("Please upload a dataset first.")
 
+# ------------------- Market Basket Analysis -------------------
 elif option == "Market Basket Analysis":
     df = st.session_state.get('df')
     if df is not None:
