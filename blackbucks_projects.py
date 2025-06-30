@@ -12,7 +12,7 @@ from mlxtend.preprocessing import TransactionEncoder
 
 st.set_page_config(page_title="Smart Market Analyzer", layout="wide")
 
-st.title("🏍️ Smart Market Analyzer with AI Assistant")
+st.title("🛍️ Smart Market Analyzer with AI Assistant")
 st.markdown("""
 Welcome to **Smart Market Analyzer**, an intelligent data exploration platform for:
 
@@ -26,7 +26,13 @@ if 'df' not in st.session_state:
     st.session_state['df'] = None
 
 st.sidebar.title("🤖 AI Assistant")
-user_query = st.sidebar.text_input("Ask a question about your data or the analysis:")
+user_query = st.sidebar.text_input("Ask a question about your data or the analysis:", key="user_input")
+submit_query = st.sidebar.button("Enter")
+
+if submit_query and user_query:
+    df = st.session_state.get('df')
+    st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
+    st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
 
 def advanced_bot_reply(query, df):
     query = query.lower()
@@ -58,10 +64,7 @@ def advanced_bot_reply(query, df):
         return nulls[nulls > 0].to_string() if not nulls.empty else "No missing values."
     return "I'm here to assist with your uploaded dataset and this website's features. Please ask questions related to your data or the tool."
 
-if user_query:
-    df = st.session_state.get('df')
-    st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
-    st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
+read_button = st.sidebar.button("🔊 Read Bot Response Aloud")  # Optional: can remove since pyttsx3 is removed
 
 option = st.sidebar.selectbox(
     "Choose Analysis Module",
