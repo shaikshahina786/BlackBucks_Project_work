@@ -4,7 +4,6 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-import pyttsx3
 import speech_recognition as sr
 import re
 from sklearn.cluster import KMeans
@@ -12,17 +11,21 @@ from sklearn.preprocessing import StandardScaler
 from mlxtend.frequent_patterns import apriori, association_rules
 from mlxtend.preprocessing import TransactionEncoder
 
+# ⚠️ DO NOT use pyttsx3 on Streamlit Cloud
+# import pyttsx3 ← removed
+
 st.set_page_config(page_title="Smart Market Analyzer", layout="wide")
 
-if 'engine' not in st.session_state:
-    st.session_state.engine = pyttsx3.init()
+# 🔒 Voice Output Removed for Deployment
+# if 'engine' not in st.session_state:
+#     st.session_state.engine = pyttsx3.init()
 
-def speak_safe(text):
-    try:
-        st.session_state.engine.say(text)
-        st.session_state.engine.runAndWait()
-    except RuntimeError:
-        pass
+# def speak_safe(text):
+#     try:
+#         st.session_state.engine.say(text)
+#         st.session_state.engine.runAndWait()
+#     except RuntimeError:
+#         pass
 
 def listen_to_microphone():
     recognizer = sr.Recognizer()
@@ -40,7 +43,6 @@ def listen_to_microphone():
 st.title("🛍️ Smart Market Analyzer with AI Assistant")
 st.markdown("""
 Welcome to **Smart Market Analyzer**, an intelligent data exploration platform for:
-
 - 🧠 Customer Segmentation using Clustering (KMeans)
 - 🛒 Market Basket Analysis using Apriori Algorithm
 - 📊 Interactive Data Visualization
@@ -95,9 +97,10 @@ if user_query:
     st.session_state['bot_response'] = advanced_bot_reply(user_query, df)
     st.sidebar.success(f"Bot: {st.session_state['bot_response']}")
 
-read_button = st.sidebar.button("🔊 Read Bot Response Aloud")
-if read_button and 'bot_response' in st.session_state:
-    speak_safe(st.session_state['bot_response'])
+# 🔊 Voice output disabled
+# read_button = st.sidebar.button("🔊 Read Bot Response Aloud")
+# if read_button and 'bot_response' in st.session_state:
+#     speak_safe(st.session_state['bot_response'])
 
 option = st.sidebar.selectbox(
     "Choose Analysis Module",
