@@ -135,7 +135,7 @@ elif option == "Data Visualization":
     else:
         st.warning("Please upload a dataset first.")
 
-# ------------------- Customer Segmentation -------------------
+# ------------------- Customer Segmentation (Corrected) -------------------
 elif option == "Customer Segmentation (Clustering)":
     df = st.session_state.get('df')
     if df is not None:
@@ -144,16 +144,35 @@ elif option == "Customer Segmentation (Clustering)":
         features = st.multiselect("Select features for clustering", numeric_cols, default=numeric_cols)
         if len(features) >= 2:
             k = st.slider("Select number of clusters (K)", 2, 10, 3)
-            scaled_data = StandardScaler().fit_transform(df[features])
-            kmeans = KMeans(n_clusters=k, random_state=42)
-            df['Cluster'] = kmeans.fit_predict(scaled_data)
-            st.success("Clustering completed!")
-            cluster_summary = df.groupby('Cluster')[features].mean().round(2)
-            st.write("### Cluster Centers (Mean Values):")
-            st.dataframe(cluster_summary)
-            fig = px.scatter(df, x=features[0], y=features[1], color='Cluster', title="Customer Segments")
-            st.plotly_chart(fig)
-            st.session_state['df'] = df
+
+            # Clean the data: remove NaN and inf
+            df_clean = df[features].replace([np.inf, -np.inf], np.nan).dropna()
+            valid_indices = df_clean.index
+
+            if df_clean.empty:
+                st.error("No valid rows available for clustering after removing NaN or infinite values.")
+            else:
+                scaled_data = StandardScaler().fit_transform(df_clean)
+                kmeans = KMeans(n_clusters=k, random_state=42)
+                clusters = kmeans.fit_predict(scaled_data)
+
+                # Assign cluster labels back to main DataFrame
+                df['Cluster'] = np.nan
+                df.loc[valid_indices, 'Cluster'] = clusters
+
+                st.success("Clustering completed!")
+                cluster_summary = df.loc[valid_indices].groupby('Cluster')[features].mean().round(2)
+                st.write("### Cluster Centers (Mean Values):")
+                st.dataframe(cluster_summary)
+
+                fig = px.scatter(df.loc[valid_indices], x=features[0], y=features[1], color='Cluster', title="Customer Segments")
+                st.plotly_chart(fig)
+
+                st.session_state['df'] = df
+
+                excluded = len(df) - len(valid_indices)
+                if excluded > 0:
+                    st.warning(f"Note: {excluded} rows with missing or invalid values were excluded from clustering.")
         else:
             st.warning("Please select at least 2 numeric features.")
     else:
