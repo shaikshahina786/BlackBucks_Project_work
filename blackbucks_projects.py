@@ -93,20 +93,29 @@ elif option == "Data Visualization":
         y_axis = st.selectbox("Select Y-axis", col_options)
 
         if chart_type == "Pie Chart":
-            df_filtered = df[[x_axis, y_axis]].dropna()
-            if df_filtered.empty:
-                st.warning("Selected columns contain only missing values.")
-            elif y_axis not in df_filtered.columns:
-                st.error("Selected Y-axis column does not exist in the filtered dataset.")
-            elif not pd.api.types.is_numeric_dtype(df_filtered[y_axis]):
-                st.error("Y-axis must be numeric for a pie chart.")
-            elif df_filtered[y_axis].sum() <= 0:
-                st.warning("Sum of Y-axis values is zero. Cannot display pie chart.")
-            elif not pd.api.types.is_object_dtype(df[x_axis]):
-                st.error("X-axis must be categorical for a pie chart.")
-            else:
-                fig = px.pie(df_filtered, names=x_axis, values=y_axis)
-                st.plotly_chart(fig)
+            try:
+                if pd.api.types.is_object_dtype(df[x_axis]) and (y_axis == x_axis or not pd.api.types.is_numeric_dtype(df[y_axis])):
+                    df_counted = df[x_axis].value_counts().reset_index()
+                    df_counted.columns = [x_axis, 'Count']
+                    fig = px.pie(df_counted, names=x_axis, values='Count')
+                    st.plotly_chart(fig)
+                else:
+                    df_filtered = df[[x_axis, y_axis]].dropna()
+                    if df_filtered.empty:
+                        st.warning("Selected columns contain only missing values.")
+                    elif y_axis not in df_filtered.columns:
+                        st.error("Selected Y-axis column does not exist in the filtered dataset.")
+                    elif not pd.api.types.is_numeric_dtype(df_filtered[y_axis]):
+                        st.error("Y-axis must be numeric for a pie chart.")
+                    elif df_filtered[y_axis].sum() <= 0:
+                        st.warning("Sum of Y-axis values is zero. Cannot display pie chart.")
+                    elif not pd.api.types.is_object_dtype(df[x_axis]):
+                        st.error("X-axis must be categorical for a pie chart.")
+                    else:
+                        fig = px.pie(df_filtered, names=x_axis, values=y_axis)
+                        st.plotly_chart(fig)
+            except Exception as e:
+                st.error(f"Error generating pie chart: {e}")
         else:
             chart_funcs = {
                 "Bar Chart": px.bar,
