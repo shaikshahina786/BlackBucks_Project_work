@@ -96,11 +96,13 @@ elif option == "Data Visualization":
             df_filtered = df[[x_axis, y_axis]].dropna()
             if df_filtered.empty:
                 st.warning("Selected columns contain only missing values.")
-            elif not np.issubdtype(df_filtered[y_axis].dtype, np.number):
+            elif y_axis not in df_filtered.columns:
+                st.error("Selected Y-axis column does not exist in the filtered dataset.")
+            elif not pd.api.types.is_numeric_dtype(df_filtered[y_axis]):
                 st.error("Y-axis must be numeric for a pie chart.")
             elif df_filtered[y_axis].sum() <= 0:
                 st.warning("Sum of Y-axis values is zero. Cannot display pie chart.")
-            elif df[x_axis].dtype != 'object':
+            elif not pd.api.types.is_object_dtype(df[x_axis]):
                 st.error("X-axis must be categorical for a pie chart.")
             else:
                 fig = px.pie(df_filtered, names=x_axis, values=y_axis)
